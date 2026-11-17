@@ -1,0 +1,12 @@
+# Store text files with LF in the repo, check them out native to the OS.
+# Keeps diffs clean if this is ever opened on Mac or Linux.
+* text=auto
+
+# Binary assets — never line-ending-converted.
+*.webp binary
+*.gif  binary
+*.jpg  binary
+*.jpeg binary
+*.png  binary
+*.avif binary
+*.ico  binary

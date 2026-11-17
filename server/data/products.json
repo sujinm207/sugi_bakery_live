@@ -1,0 +1,218 @@
+[
+  {
+    "id": 1,
+    "name": "Banana Chips",
+    "emoji": "🍌",
+    "tag": "Kerala Classic",
+    "tagStyle": "crispy",
+    "description": "Crispy golden banana chips made from fresh Kerala bananas",
+    "image": "/images/banana_chips_outdoor.webp",
+    "gif": "https://www.icegif.com/wp-content/uploads/2022/04/icegif-426.gif",
+    "sizes": [
+      {
+        "name": "250g",
+        "price": 80
+      },
+      {
+        "name": "500g",
+        "price": 160
+      },
+      {
+        "name": "1kg",
+        "price": 320
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Mixture1",
+    "emoji": "🥜",
+    "tag": "Crowd Favourite",
+    "tagStyle": "classic",
+    "description": "Traditional South Indian mixture with peanuts, curry leaves and spices",
+    "image": "/images/mixture_snacks.webp",
+    "gif": "",
+    "sizes": [
+      {
+        "name": "250g",
+        "price": 60
+      },
+      {
+        "name": "500g",
+        "price": 120
+      },
+      {
+        "name": "1kg",
+        "price": 240
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Seeval",
+    "emoji": "🍜",
+    "tag": "Tea Time",
+    "tagStyle": "crispy",
+    "description": "Thin and crispy rice noodles, perfect tea-time snack",
+    "image": "/images/seeval.webp",
+    "gif": "",
+    "sizes": [
+      {
+        "name": "250g",
+        "price": 60
+      },
+      {
+        "name": "500g",
+        "price": 120
+      },
+      {
+        "name": "1kg",
+        "price": 240
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Karasev",
+    "emoji": "🌶️",
+    "tag": "Spicy",
+    "tagStyle": "hot",
+    "description": "Spicy and crunchy gram flour noodles with authentic taste",
+    "image": "/images/karasev.webp",
+    "gif": "",
+    "sizes": [
+      {
+        "name": "250g",
+        "price": 60
+      },
+      {
+        "name": "500g",
+        "price": 120
+      },
+      {
+        "name": "1kg",
+        "price": 240
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "name": "Oma Podi",
+    "emoji": "🌿",
+    "tag": "Traditional",
+    "tagStyle": "classic",
+    "description": "Traditional grandmother's recipe podi with aromatic spices",
+    "image": "/images/omapodi.webp",
+    "gif": "",
+    "sizes": [
+      {
+        "name": "250g",
+        "price": 60
+      },
+      {
+        "name": "500g",
+        "price": 120
+      },
+      {
+        "name": "1kg",
+        "price": 240
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "name": "Arisi Muruku",
+    "emoji": "🌀",
+    "tag": "Extra Crunchy",
+    "tagStyle": "crispy",
+    "description": "Spiral-shaped rice flour snack, crispy and delicious",
+    "image": "/images/muruku.webp",
+    "gif": "",
+    "sizes": [
+      {
+        "name": "250g",
+        "price": 60
+      },
+      {
+        "name": "500g",
+        "price": 120
+      },
+      {
+        "name": "1kg",
+        "price": 240
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "name": "Pakoda",
+    "emoji": "🥟",
+    "tag": "Fried Fresh",
+    "tagStyle": "classic",
+    "description": "Crispy deep-fried fritters with spices and herbs",
+    "image": "/images/pakkoda_image.webp",
+    "gif": "",
+    "sizes": [
+      {
+        "name": "250g",
+        "price": 60
+      },
+      {
+        "name": "500g",
+        "price": 120
+      },
+      {
+        "name": "1kg",
+        "price": 240
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "name": "Masala Kadalai",
+    "emoji": "🥜",
+    "tag": "Masala",
+    "tagStyle": "hot",
+    "description": "Spicy roasted peanuts with aromatic masala coating",
+    "image": "/images/kadalai_image.webp",
+    "gif": "",
+    "sizes": [
+      {
+        "name": "250g",
+        "price": 60
+      },
+      {
+        "name": "500g",
+        "price": 120
+      },
+      {
+        "name": "1kg",
+        "price": 240
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "name": "Red Andhra Murukku",
+    "emoji": "🌶️",
+    "tag": "Fiery Hot",
+    "tagStyle": "hot",
+    "description": "Spicy red chili flavored murukku from Andhra style",
+    "image": "/images/red-andhra-murukku.webp",
+    "gif": "",
+    "sizes": [
+      {
+        "name": "250g",
+        "price": 60
+      },
+      {
+        "name": "500g",
+        "price": 120
+      },
+      {
+        "name": "1kg",
+        "price": 240
+      }
+    ]
+  }
+]

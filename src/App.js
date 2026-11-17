@@ -1,143 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import Header from './components/Header';
 import Hero from './components/Hero';
+import Ticker from './components/Ticker';
 import Featured from './components/Featured';
 import About from './components/About';
 import Contact from './components/Contact';
 import Cart from './components/Cart';
 import Footer from './components/Footer';
+import MobileBar from './components/MobileBar';
+import { ShopContext } from './constants';
+import { fetchProducts, fetchSettings } from './api';
+import { DEFAULT_PRODUCTS, DEFAULT_SETTINGS } from './defaultData';
 
-const products = [
-  {
-    id: 1,
-    name: 'Banana Chips',
-    emoji: '🍌',
-    description: 'Crispy golden banana chips made from fresh Kerala bananas',
-    image: '/images/banana_chips_outdoor.webp',
-    gif: '/images/banana-chips.gif',
-    sizes: [
-      { name: '250g', price: 80 },
-      { name: '500g', price: 160 },
-      { name: '1kg', price: 320 }
-    ]
-  },
-  {
-    id: 2,
-    name: 'Mixture',
-    emoji: '🥜',
-    description: 'Traditional South Indian mixture with peanuts, curry leaves and spices',
-    image: '/images/mixture_snacks.webp',
-    gif: '/images/mixture.gif',
-    sizes: [
-      { name: '250g', price: 60 },
-      { name: '500g', price: 120 },
-      { name: '1kg', price: 240 }
-    ]
-  },
-  {
-    id: 3,
-    name: 'Seeval',
-    emoji: '🍜',
-    description: 'Thin and crispy rice noodles, perfect tea-time snack',
-    image: '/images/seeval.webp',
-    gif: '/images/seeval.gif',
-    sizes: [
-      { name: '250g', price: 60 },
-      { name: '500g', price: 120 },
-      { name: '1kg', price: 240 }
-    ]
-  },
-  {
-    id: 4,
-    name: 'Karasev',
-    emoji: '🌶️',
-    description: 'Spicy and crunchy gram flour noodles with authentic taste',
-    image: '/images/karasev.webp',
-    gif: '/images/karasev.gif',
-    sizes: [
-      { name: '250g', price: 60 },
-      { name: '500g', price: 120 },
-      { name: '1kg', price: 240 }
-    ]
-  },
-  {
-    id: 5,
-    name: 'Oma Podi',
-    emoji: '🌿',
-    description: "Traditional grandmother's recipe podi with aromatic spices",
-    image: '/images/omapodi.webp',
-    gif: '/images/oma-podi.gif',
-    sizes: [
-      { name: '250g', price: 60 },
-      { name: '500g', price: 120 },
-      { name: '1kg', price: 240 }
-    ]
-  },
-  {
-    id: 6,
-    name: 'Arisi Muruku',
-    emoji: '🌀',
-    description: 'Spiral-shaped rice flour snack, crispy and delicious',
-    image: '/images/muruku.webp',
-    gif: '/images/arisi-muruku.gif',
-    sizes: [
-      { name: '250g', price: 60 },
-      { name: '500g', price: 120 },
-      { name: '1kg', price: 240 }
-    ]
-  },
-  {
-    id: 7,
-    name: 'Pakoda',
-    emoji: '🥟',
-    description: 'Crispy deep-fried fritters with spices and herbs',
-    image: '/images/pakkoda_image.webp',
-    gif: '/images/pakoda.gif',
-    sizes: [
-      { name: '250g', price: 60 },
-      { name: '500g', price: 120 },
-      { name: '1kg', price: 240 }
-    ]
-  },
-  {
-    id: 8,
-    name: 'Masala Kadalai',
-    emoji: '🥜',
-    description: 'Spicy roasted peanuts with aromatic masala coating',
-    image: '/images/kadalai_image.webp',
-    gif: '/images/masala-kadalai.gif',
-    sizes: [
-      { name: '250g', price: 60 },
-      { name: '500g', price: 120 },
-      { name: '1kg', price: 240 }
-    ]
-  },
-  {
-    id: 9,
-    name: 'Red Andhra Murukku',
-    emoji: '🌶️',
-    description: 'Spicy red chili flavored murukku from Andhra style',
-    image: '/images/red andra murukku.webp',
-    gif: '/images/red-andhra-murukku.gif',
-    sizes: [
-      { name: '250g', price: 60 },
-      { name: '500g', price: 120 },
-      { name: '1kg', price: 240 }
-    ]
-  }
-];
+/* Fade sections in as they scroll into view.
+   Re-runs when the product list changes, so cards added by the
+   admin are picked up by the observer too. */
+function useScrollReveal(deps) {
+  useEffect(() => {
+    const nodes = document.querySelectorAll('.reveal:not(.is-visible)');
+    if (!('IntersectionObserver' in window)) {
+      nodes.forEach((n) => n.classList.add('is-visible'));
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -60px 0px' }
+    );
+
+    nodes.forEach((n) => observer.observe(n));
+    return () => observer.disconnect();
+  }, deps); // eslint-disable-line react-hooks/exhaustive-deps
+}
 
 function App() {
+  const [products, setProducts] = useState(DEFAULT_PRODUCTS);
+  const [shop, setShop] = useState(DEFAULT_SETTINGS);
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const handleAddToCart = (product, size) => {
+  // Load the live menu. If the API is unreachable we keep the
+  // bundled snapshot rather than showing an empty shop.
+  useEffect(() => {
+    let cancelled = false;
+
+    Promise.allSettled([fetchProducts(), fetchSettings()]).then(([p, s]) => {
+      if (cancelled) return;
+      if (p.status === 'fulfilled' && Array.isArray(p.value) && p.value.length) {
+        setProducts(p.value);
+      }
+      if (s.status === 'fulfilled' && s.value && s.value.phoneRaw) {
+        setShop(s.value);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useScrollReveal([products.length]);
+
+  useEffect(() => {
+    document.body.style.overflow = isCartOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isCartOpen]);
+
+  const handleAddToCart = useCallback((product, size) => {
     const cartItem = {
       id: `${product.id}-${size.name}`,
       name: product.name,
       size: size.name,
       price: size.price,
+      image: product.image,
+      emoji: product.emoji,
       quantity: 1
     };
 
@@ -152,15 +98,13 @@ function App() {
       }
       return [...prev, cartItem];
     });
-  };
+  }, []);
 
   const handleUpdateQuantity = (id, change) => {
     setCartItems((prev) =>
       prev
         .map((item) =>
-          item.id === id
-            ? { ...item, quantity: item.quantity + change }
-            : item
+          item.id === id ? { ...item, quantity: item.quantity + change } : item
         )
         .filter((item) => item.quantity > 0)
     );
@@ -173,21 +117,25 @@ function App() {
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="App">
-      <Header onCartClick={() => setIsCartOpen(true)} cartCount={cartCount} />
-      <Hero />
-      <Featured products={products} onAddToCart={handleAddToCart} />
-      <About />
-      <Contact />
-      <Footer />
-      <Cart
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        cartItems={cartItems}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemove={handleRemove}
-      />
-    </div>
+    <ShopContext.Provider value={shop}>
+      <div className="App">
+        <Header onCartClick={() => setIsCartOpen(true)} cartCount={cartCount} />
+        <Hero products={products} />
+        <Ticker products={products} />
+        <Featured products={products} onAddToCart={handleAddToCart} />
+        <About products={products} />
+        <Contact />
+        <Footer />
+        <MobileBar onCartClick={() => setIsCartOpen(true)} cartCount={cartCount} />
+        <Cart
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          cartItems={cartItems}
+          onUpdateQuantity={handleUpdateQuantity}
+          onRemove={handleRemove}
+        />
+      </div>
+    </ShopContext.Provider>
   );
 }
 

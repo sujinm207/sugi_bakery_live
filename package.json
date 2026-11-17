@@ -2,13 +2,22 @@
   "name": "sugi-bakery-react",
   "version": "1.0.0",
   "private": true,
+  "proxy": "http://localhost:4000",
   "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "multer": "^2.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1"
   },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "concurrently -n shop,api -c green,yellow \"react-scripts start\" \"node server/index.js\"",
+    "web": "react-scripts start",
+    "server": "node server/index.js",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

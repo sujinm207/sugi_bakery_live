@@ -1,0 +1,15 @@
+{
+  "name": "Sugi Bakery",
+  "tagline": "Handmade snacks from Kanyakumari",
+  "phone": "+91 96774 94302",
+  "phoneRaw": "919677494302",
+  "address": "Madhavapuram Junction\nKanyakumari — 629702",
+  "hours": "Mon–Sat: 9:00 AM – 10:00 PM\nSun: 10:00 AM – 10:00 PM",
+  "freeDeliveryAbove": 500,
+  "promo": [
+    "🚚 FREE HOME DELIVERY on orders above ₹500",
+    "👐 Handmade in small batches",
+    "🌿 Locally sourced ingredients",
+    "🥨 Traditional South Indian recipes"
+  ]
+}

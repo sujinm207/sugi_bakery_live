@@ -1,95 +1,143 @@
 import React from 'react';
+import { useShop, waLink } from '../constants';
 
 const Cart = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemove }) => {
+  const shop = useShop();
+  const FREE_AT = shop.freeDeliveryAbove;
+
   const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const freeDelivery = total >= 500;
+  const count = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const freeDelivery = total >= FREE_AT;
+  const progress = Math.min(100, Math.round((total / FREE_AT) * 100));
 
   const sendWhatsAppOrder = () => {
-    if (cartItems.length === 0) {
-      alert('Your cart is empty!');
-      return;
-    }
+    if (cartItems.length === 0) return;
 
-    let message = "Hi Sugi Bakery, I want to place an order:\\n\\n";
-    
-    cartItems.forEach(item => {
-      message += `${item.name} (${item.size}) - ₹${item.price} x ${item.quantity} = ₹${item.price * item.quantity}\\n`;
-    });
-    
-    message += `\\nTotal: ₹${total}`;
-    
-    if (freeDelivery) {
-      message += "\\n🎉 FREE HOME DELIVERY (Order above ₹500)";
-    } else {
-      message += `\\n📦 Add ₹${500 - total} more for FREE delivery!`;
-    }
-    
-    const whatsappUrl = `https://wa.me/919677494302?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    const lines = cartItems.map(
+      (item) =>
+        `• ${item.name} (${item.size}) — ₹${item.price} × ${item.quantity} = ₹${
+          item.price * item.quantity
+        }`
+    );
+
+    const message = [
+      `Hi ${shop.name}, I'd like to place an order:`,
+      '',
+      ...lines,
+      '',
+      `Total: ₹${total}`,
+      freeDelivery
+        ? '🎉 Free home delivery (order above ₹' + FREE_AT + ')'
+        : `📦 Adding ₹${FREE_AT - total} more would qualify for free delivery`
+    ].join('\n');
+
+    window.open(waLink(shop.phoneRaw, message), '_blank', 'noopener');
   };
 
   return (
     <>
-      <div 
+      <div
         className={`cart-overlay ${isOpen ? 'active' : ''}`}
         onClick={onClose}
-      ></div>
-      <div className={`cart-sidebar ${isOpen ? 'open' : ''}`}>
+      />
+
+      <aside className={`cart-sidebar ${isOpen ? 'open' : ''}`} aria-hidden={!isOpen}>
         <div className="cart-header">
-          <h3>Shopping Cart</h3>
-          <button className="close-cart" onClick={onClose}>×</button>
+          <h3>
+            Your Cart
+            <small>{count} {count === 1 ? 'item' : 'items'}</small>
+          </h3>
+          <button className="close-cart" onClick={onClose} aria-label="Close cart">
+            ×
+          </button>
         </div>
+
         <div className="cart-items">
           {cartItems.length === 0 ? (
-            <p style={{ color: '#cccccc', textAlign: 'center', marginTop: '2rem' }}>
-              Your cart is empty
-            </p>
+            <div className="cart-empty">
+              <span className="big">🛍️</span>
+              <p>Your cart is empty</p>
+              <p style={{ fontSize: '0.84rem' }}>
+                Pick a size from the menu to get started.
+              </p>
+            </div>
           ) : (
             cartItems.map((item) => (
               <div key={item.id} className="cart-item">
-                <div className="cart-item-header">
-                  <h4>{item.name}</h4>
-                  <button className="remove-btn" onClick={() => onRemove(item.id)}>
-                    Remove
-                  </button>
-                </div>
-                <div className="cart-item-details">
-                  {item.size} - ₹{item.price}
-                </div>
-                <div className="quantity-controls">
-                  <button className="qty-btn" onClick={() => onUpdateQuantity(item.id, -1)}>
-                    -
-                  </button>
-                  <span style={{ color: 'white', minWidth: '30px', textAlign: 'center' }}>{item.quantity}</span>
-                  <button className="qty-btn" onClick={() => onUpdateQuantity(item.id, 1)}>
-                    +
-                  </button>
-                  <span className="item-total">₹{item.price * item.quantity}</span>
+                {item.image ? (
+                  <img className="cart-item-thumb" src={item.image} alt={item.name} />
+                ) : (
+                  <span className="cart-item-thumb" style={{ display: 'grid', placeItems: 'center', fontSize: '1.6rem' }}>
+                    {item.emoji}
+                  </span>
+                )}
+
+                <div className="cart-item-body">
+                  <div className="cart-item-header">
+                    <h4>{item.name}</h4>
+                    <button
+                      className="remove-btn"
+                      onClick={() => onRemove(item.id)}
+                      aria-label={`Remove ${item.name}`}
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="cart-item-details">
+                    {item.size} · ₹{item.price}
+                  </div>
+
+                  <div className="quantity-controls">
+                    <button
+                      className="qty-btn"
+                      onClick={() => onUpdateQuantity(item.id, -1)}
+                      aria-label="Decrease quantity"
+                    >
+                      −
+                    </button>
+                    <span className="qty-val">{item.quantity}</span>
+                    <button
+                      className="qty-btn"
+                      onClick={() => onUpdateQuantity(item.id, 1)}
+                      aria-label="Increase quantity"
+                    >
+                      +
+                    </button>
+                    <span className="item-total">₹{item.price * item.quantity}</span>
+                  </div>
                 </div>
               </div>
             ))
           )}
         </div>
+
         {cartItems.length > 0 && (
           <div className="cart-footer">
-            <div className="cart-total">
-              Total: ₹{total}
-            </div>
             {freeDelivery ? (
               <div className="delivery-status free">
-                🎉 FREE HOME DELIVERY!
+                🎉 You've unlocked FREE home delivery!
               </div>
-            ) : total > 0 ? (
+            ) : (
               <div className="delivery-status pending">
-                Add ₹{500 - total} more for FREE delivery!
+                Add ₹{FREE_AT - total} more for free delivery
+                <div className="delivery-bar">
+                  <span style={{ width: `${progress}%` }} />
+                </div>
               </div>
-            ) : null}
-            <button className="btn-primary" onClick={sendWhatsAppOrder} style={{ width: '100%' }}>
-              Order via WhatsApp
+            )}
+
+            <div className="cart-total">
+              <span>Total</span>
+              <b>₹{total}</b>
+            </div>
+
+            <button className="btn-primary" onClick={sendWhatsAppOrder}>
+              💬 Order via WhatsApp
             </button>
           </div>
         )}
-      </div>
+      </aside>
     </>
   );
 };
