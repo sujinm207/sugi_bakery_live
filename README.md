@@ -112,15 +112,18 @@ ways to fix it permanently:
 
 **Most reliable:** give the server its own token.
 
-1. Go to https://github.com/settings/tokens → **Generate new token (classic)**
-2. Tick only the **repo** box, set an expiry, and generate it
-3. Add it to your `.env` file as a new line:
+1. Go to https://github.com/settings/personal-access-tokens/new
+2. **Token name:** `sugi-bakery-publish`
+3. **Expiration:** 90 days (or whatever you prefer — you'll just repeat this when it runs out)
+4. **Repository access:** *Only select repositories* → pick **sugi_bakery_live**
+5. **Permissions** → *Repository permissions* → **Contents** → **Read and write**
+6. **Generate token**, then copy it — GitHub shows it only once
+7. Open `.env` in Notepad and paste it after `GITHUB_TOKEN=`
+8. Restart the server (`Ctrl+C` in the terminal, then `npm start`)
 
-```
-GITHUB_TOKEN=ghp_your_token_here
-```
-
-4. Restart the server
+This token can only touch this one repository's files — it can't read your other
+repos, change settings or delete anything. If it ever leaks, revoke it on the same
+page and make a new one.
 
 `.env` is git-ignored, so the token stays on your computer. After that, Publish works
 on its own with nothing to click through.
