@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './Admin.css';
 import {
   fetchProducts, fetchSettings, login, saveProducts, saveSettings,
-  uploadImage, getToken, setToken
+  uploadImage, getToken, setToken, fetchPublishStatus, publish
 } from '../api';
+
+const LIVE_URL = 'https://sugibakery.netlify.app';
 
 const BADGE_STYLES = [
   { value: 'hot', label: 'Hot / Spicy (red)' },
@@ -373,7 +375,18 @@ export default function Admin() {
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [pending, setPending] = useState(null);
+  const [publishing, setPublishing] = useState(false);
   const dragIndex = useRef(null);
+
+  // How much is saved locally but not yet on the live site.
+  const refreshPending = useCallback(async () => {
+    try {
+      setPending(await fetchPublishStatus());
+    } catch {
+      setPending(null); // git unavailable — the button just stays quiet
+    }
+  }, []);
 
   const load = useCallback(async () => {
     const [p, s] = await Promise.all([fetchProducts(), fetchSettings()]);
@@ -381,7 +394,8 @@ export default function Admin() {
     setSettings({ ...s, promo: s.promo || [] });
     setSelectedId((prev) => prev ?? (p[0] && p[0].id));
     setDirty(false);
-  }, []);
+    refreshPending();
+  }, [refreshPending]);
 
   useEffect(() => {
     if (authed) load().catch((e) => setStatus({ type: 'error', text: e.message }));
@@ -465,7 +479,8 @@ export default function Admin() {
       setProducts(savedProducts);
       setSettings({ ...savedSettings, promo: savedSettings.promo || [] });
       setDirty(false);
-      setStatus({ type: 'ok', text: 'Saved — the shop is updated' });
+      setStatus({ type: 'ok', text: 'Saved. Press Publish to put it on the live site.' });
+      refreshPending();
     } catch (err) {
       if (err.status === 401) {
         setToken('');
@@ -477,6 +492,38 @@ export default function Admin() {
       setSaving(false);
     }
   };
+
+  const doPublish = async () => {
+    if (dirty) {
+      setStatus({ type: 'error', text: 'Save your changes first, then publish.' });
+      return;
+    }
+    if (!window.confirm('This updates the live website that customers see. Continue?')) return;
+
+    setPublishing(true);
+    setStatus(null);
+    try {
+      const result = await publish();
+      setStatus({
+        type: result.status === 'nothing' ? 'ok' : 'ok',
+        text: result.message
+      });
+      refreshPending();
+    } catch (err) {
+      if (err.status === 401) {
+        setToken('');
+        setAuthed(false);
+        return;
+      }
+      setStatus({ type: 'error', text: err.message });
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const pendingCount = pending
+    ? (pending.files ? pending.files.length : 0) + (pending.unpushed || 0)
+    : 0;
 
   const signOut = () => {
     if (dirty && !window.confirm('You have unsaved changes. Sign out anyway?')) return;
@@ -512,12 +559,28 @@ export default function Admin() {
 
         <div className="admin-actions">
           {dirty && <span className="dirty-dot">Unsaved changes</span>}
-          <a className="btn btn-ghost btn-sm" href="/" target="_blank" rel="noopener noreferrer">
-            View shop ↗
-          </a>
+
           <button className="btn btn-primary" onClick={save} disabled={saving || !dirty}>
             {saving ? 'Saving…' : 'Save changes'}
           </button>
+
+          <button
+            className="btn btn-publish"
+            onClick={doPublish}
+            disabled={publishing || dirty || pendingCount === 0}
+            title={
+              dirty ? 'Save your changes first'
+                : pendingCount === 0 ? 'The live site is already up to date'
+                : `${pendingCount} change${pendingCount === 1 ? '' : 's'} ready to publish`
+            }
+          >
+            {publishing ? 'Publishing…' : '🌐 Publish to live site'}
+            {pendingCount > 0 && !publishing && <span className="count">{pendingCount}</span>}
+          </button>
+
+          <a className="btn btn-ghost btn-sm" href={LIVE_URL} target="_blank" rel="noopener noreferrer">
+            View live ↗
+          </a>
           <button className="btn btn-ghost btn-sm" onClick={signOut}>Sign out</button>
         </div>
       </header>

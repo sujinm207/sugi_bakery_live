@@ -60,6 +60,29 @@
 
 .btn-primary:hover:not(:disabled) { filter: brightness(1.12); }
 
+/* Publish is the outward-facing action — gold, so it reads as
+   distinct from the local-only Save. */
+.btn-publish {
+    background: linear-gradient(135deg, #b45309, var(--a-accent));
+    color: #2a1c00;
+}
+
+.btn-publish:hover:not(:disabled) { filter: brightness(1.12); }
+
+.btn-publish .count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    margin-left: 0.15rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.35);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
 .btn-ghost {
     background: rgba(255, 255, 255, 0.05);
     border-color: var(--a-line);

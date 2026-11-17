@@ -10,11 +10,14 @@ Storefront + admin panel for Sugi Bakery, Kanyakumari.
 The live site is **static** — Netlify serves plain files, which is why it's fast and
 free. The menu is baked into the site when Netlify builds it.
 
-So editing the shop is a two-step rhythm:
+So editing the shop is a two-step rhythm, both done in the admin:
 
-1. Run the admin on your computer and make your changes
-2. Double-click **`publish.bat`** — Netlify rebuilds and the live site updates in
+1. Make your changes and press **Save changes** — the local site updates at once
+2. Press **Publish to live site** — Netlify rebuilds and the live site updates in
    about a minute
+
+The Publish button shows a number: how many changes are saved on your computer but
+not yet live. When it reads zero, the live site matches what you see.
 
 Your product data is stored in `src/data/` and versioned in git, so every change is
 saved forever and you can always go back.
@@ -93,18 +96,44 @@ They're committed to git, so your menu history is your backup.
 
 ## Publishing
 
-`publish.bat` commits your changes and pushes to GitHub. Netlify watches the repo and
-rebuilds automatically.
+Press **Publish to live site** in the admin. It commits your menu and uploads, pushes
+to GitHub, and Netlify rebuilds automatically.
 
-Equivalent by hand:
+It only ever publishes `src/data/` and `public/uploads/` — your menu and your photos.
+Code changes are deliberately left alone, so the button can never push a half-finished
+edit. Those still go through GitHub Desktop or `git push`.
+
+### If Publish asks you to sign in
+
+The first time, GitHub may refuse because the server has no saved credentials. Two
+ways to fix it permanently:
+
+**Easiest:** open GitHub Desktop once and press **Push origin**.
+
+**Most reliable:** give the server its own token.
+
+1. Go to https://github.com/settings/tokens → **Generate new token (classic)**
+2. Tick only the **repo** box, set an expiry, and generate it
+3. Add it to your `.env` file as a new line:
+
+```
+GITHUB_TOKEN=ghp_your_token_here
+```
+
+4. Restart the server
+
+`.env` is git-ignored, so the token stays on your computer. After that, Publish works
+on its own with nothing to click through.
+
+### Doing it by hand
+
+`publish.bat` (double-click) or:
 
 ```bash
 git add -A
 git commit -m "Update shop menu"
 git push
 ```
-
-Or use GitHub Desktop and press **Push origin**.
 
 ## Changing the colours
 

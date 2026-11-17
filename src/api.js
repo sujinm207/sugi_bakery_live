@@ -70,6 +70,12 @@ export const saveSettings = (settings) =>
     body: JSON.stringify(settings)
   });
 
+export const fetchPublishStatus = () =>
+  request('/api/publish/status', { headers: authHeaders() });
+
+export const publish = () =>
+  request('/api/publish', { method: 'POST', headers: authHeaders() });
+
 export const uploadImage = async (file) => {
   const form = new FormData();
   form.append('image', file);

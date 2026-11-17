@@ -10,6 +10,7 @@ const multer = require('multer');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const { execFile } = require('child_process');
 
 /* Load .env from the project root (no dependency needed).
    A real environment variable always wins, so hosts like Render
@@ -220,6 +221,121 @@ const upload = multer({
   }
 });
 
+/* ============================================================
+   Publishing — commits the menu and pushes it to GitHub, which
+   makes Netlify rebuild the live site.
+   ============================================================ */
+
+const REPO_DIR = path.join(__dirname, '..');
+
+// Only these paths are published. Code changes go through git
+// normally, so the button can never push a half-finished edit.
+const PUBLISH_PATHS = ['src/data', 'public/uploads'];
+
+let gitPath = null;
+
+function resolveGit() {
+  if (gitPath) return Promise.resolve(gitPath);
+
+  const candidates = [
+    process.env.GIT_PATH,
+    'git',
+    'C:\\Program Files\\Git\\cmd\\git.exe',
+    'C:\\Program Files (x86)\\Git\\cmd\\git.exe'
+  ].filter(Boolean);
+
+  const tryNext = (i) =>
+    new Promise((resolve, reject) => {
+      if (i >= candidates.length) {
+        return reject(new Error(
+          'Git is not installed, or not on this machine\'s PATH. ' +
+          'Install Git for Windows, then restart the server.'
+        ));
+      }
+      return execFile(candidates[i], ['--version'], (err) => {
+        if (err) return resolve(tryNext(i + 1));
+        gitPath = candidates[i];
+        return resolve(gitPath);
+      });
+    });
+
+  return tryNext(0);
+}
+
+function git(args, opts = {}) {
+  return resolveGit().then(
+    (bin) =>
+      new Promise((resolve, reject) => {
+        execFile(
+          bin,
+          args,
+          { cwd: REPO_DIR, windowsHide: true, timeout: opts.timeout || 120000 },
+          (err, stdout, stderr) => {
+            if (err && !opts.allowFailure) {
+              const message = (stderr || stdout || err.message).trim();
+              return reject(new Error(message));
+            }
+            // stdout is returned untrimmed: `git status --porcelain`
+            // encodes state in the first two columns, so a leading
+            // space is meaningful and trimming it corrupts the path.
+            return resolve({
+              code: err ? err.code || 1 : 0,
+              stdout: stdout || '',
+              stderr: (stderr || '').trim()
+            });
+          }
+        );
+      })
+  );
+}
+
+/** What's waiting to be published? */
+async function publishStatus() {
+  const changed = await git(['status', '--porcelain', '--', ...PUBLISH_PATHS]);
+  const files = changed.stdout
+    .split(/\r?\n/)
+    .filter((l) => l.trim())
+    .map((l) => l.slice(2).trim()); // first two columns are status codes
+
+  let unpushed = 0;
+  const counted = await git(['rev-list', '--count', '@{u}..HEAD'], { allowFailure: true });
+  if (counted.code === 0) unpushed = Number(counted.stdout.trim()) || 0;
+
+  return { files, unpushed, pending: files.length > 0 || unpushed > 0 };
+}
+
+/** Push, using a token from .env when one is set. */
+async function pushToRemote() {
+  const token = process.env.GITHUB_TOKEN;
+
+  if (!token) {
+    // Relies on cached Windows credentials.
+    return git(['push'], { timeout: 180000 });
+  }
+
+  const remote = (await git(['remote', 'get-url', 'origin'])).stdout.trim();
+  const authed = remote.replace(
+    /^https:\/\//,
+    `https://x-access-token:${token}@`
+  );
+  const branch = (await git(['rev-parse', '--abbrev-ref', 'HEAD'])).stdout.trim();
+
+  // The token is passed as an argument, never written into .git/config.
+  return git(['push', authed, `HEAD:${branch}`], { timeout: 180000 });
+}
+
+function friendlyGitError(message) {
+  if (/could not read Username|Authentication failed|terminal prompts disabled/i.test(message)) {
+    return 'GitHub needs you to sign in once. Open GitHub Desktop and press "Push origin", ' +
+           'or add a GITHUB_TOKEN line to your .env file. After that this button works on its own.';
+  }
+  if (/non-fast-forward|rejected|fetch first/i.test(message)) {
+    return 'GitHub has newer changes than this computer. Open GitHub Desktop and pull first, then publish again.';
+  }
+  if (/not installed/i.test(message)) return message;
+  return message;
+}
+
 /* ---------- app ---------- */
 
 const app = express();
@@ -261,6 +377,43 @@ app.put('/api/settings', requireAuth, (req, res) => {
     res.json(settings);
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+app.get('/api/publish/status', requireAuth, async (req, res) => {
+  try {
+    res.json(await publishStatus());
+  } catch (err) {
+    res.status(500).json({ error: friendlyGitError(err.message) });
+  }
+});
+
+app.post('/api/publish', requireAuth, async (req, res) => {
+  try {
+    const before = await publishStatus();
+    if (!before.pending) {
+      return res.json({ status: 'nothing', message: 'Everything is already live.' });
+    }
+
+    if (before.files.length) {
+      await git(['add', '--', ...PUBLISH_PATHS]);
+      const staged = await git(['diff', '--cached', '--quiet'], { allowFailure: true });
+      if (staged.code !== 0) {
+        await git(['commit', '-m', 'Update shop menu from admin']);
+      }
+    }
+
+    await pushToRemote();
+
+    const commit = (await git(['log', '-1', '--format=%h'])).stdout.trim();
+    return res.json({
+      status: 'published',
+      commit,
+      files: before.files,
+      message: 'Published. The live site updates in about a minute.'
+    });
+  } catch (err) {
+    return res.status(500).json({ error: friendlyGitError(err.message) });
   }
 });
 

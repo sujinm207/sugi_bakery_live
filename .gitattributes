@@ -2,6 +2,10 @@
 # Keeps diffs clean if this is ever opened on Mac or Linux.
 * text=auto
 
+# The admin writes these with LF; keep them LF everywhere so saving
+# in the admin never shows up as a whole-file change.
+src/data/*.json text eol=lf
+
 # Binary assets — never line-ending-converted.
 *.webp binary
 *.gif  binary
