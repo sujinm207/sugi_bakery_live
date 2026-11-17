@@ -47,9 +47,13 @@ function App() {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Load the live menu. If the API is unreachable we keep the
-  // bundled snapshot rather than showing an empty shop.
+  /* The published site is static: its menu is baked in at build time from
+     src/data, so there is no API to call and we skip it entirely. While
+     developing, the local API is live, so we fetch to pick up admin edits
+     without a restart. */
   useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return undefined;
+
     let cancelled = false;
 
     Promise.allSettled([fetchProducts(), fetchSettings()]).then(([p, s]) => {

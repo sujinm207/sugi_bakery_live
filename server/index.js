@@ -50,8 +50,13 @@ loadEnv();
 const PORT = Number(process.env.API_PORT) || 4000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'sugi-admin';
 
-const DATA_DIR = path.join(__dirname, 'data');
-const UPLOAD_DIR = path.join(__dirname, 'uploads');
+/* Data and uploads live inside the app source on purpose.
+   The React build imports src/data/*.json directly and copies
+   public/uploads/* into build/, so whatever you save in the admin is
+   exactly what gets published to Netlify — no second copy to keep in
+   sync, and everything is versioned in git. */
+const DATA_DIR = path.join(__dirname, '..', 'src', 'data');
+const UPLOAD_DIR = path.join(__dirname, '..', 'public', 'uploads');
 const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 const BUILD_DIR = path.join(__dirname, '..', 'build');

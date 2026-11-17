@@ -2,6 +2,23 @@
 
 Storefront + admin panel for Sugi Bakery, Kanyakumari.
 
+- **Live shop:** https://sugibakery.netlify.app
+- **Admin:** runs on your own computer (see below)
+
+## How this works
+
+The live site is **static** — Netlify serves plain files, which is why it's fast and
+free. The menu is baked into the site when Netlify builds it.
+
+So editing the shop is a two-step rhythm:
+
+1. Run the admin on your computer and make your changes
+2. Double-click **`publish.bat`** — Netlify rebuilds and the live site updates in
+   about a minute
+
+Your product data is stored in `src/data/` and versioned in git, so every change is
+saved forever and you can always go back.
+
 ## Running it
 
 ```bash
@@ -9,101 +26,85 @@ npm install
 npm start
 ```
 
-That starts both processes at once:
-
-| URL                              | What it is                              |
-| -------------------------------- | --------------------------------------- |
-| http://localhost:3000            | The shop                                |
-| http://localhost:3000/admin      | The admin panel                         |
-| http://localhost:4000            | The API (the shop talks to this)        |
+| URL                          | What it is      |
+| ---------------------------- | --------------- |
+| http://localhost:3000        | The shop        |
+| http://localhost:3000/admin  | The admin panel |
+| http://localhost:4000        | The local API   |
 
 To run them separately: `npm run web` (shop only) and `npm run server` (API only).
+
+> Changes under `src/` reload instantly. If you edit anything in `server/`, stop and
+> restart — Node doesn't hot-reload.
 
 ## The admin panel
 
 Open **http://localhost:3000/admin** and sign in with the password from `.env`.
 
-From there you can:
-
 - **Edit products** — name, description, badge text and colour, sizes and prices
-- **Add, delete and reorder** — drag a product in the left list (or use ↑ ↓) to change
-  the order customers see
-- **Upload photos** — replaces the product image; files land in `server/uploads/`
-- **Add a hover animation** — upload a GIF under "Hover animation" and the card plays it
-  when a customer hovers (see below)
-- **Edit shop settings** — WhatsApp number, address, opening hours, the free-delivery
+- **Add, delete and reorder** — drag in the left list (or use ↑ ↓) to set the order
+  customers see
+- **Upload photos** — saved into `public/uploads/`
+- **Add a hover animation** — upload a GIF and the card plays it on hover
+- **Edit shop settings** — WhatsApp number, address, opening hours, free-delivery
   threshold, and the scrolling banner messages
 
-Changes go live for everyone as soon as you hit **Save changes**.
+Click **Save changes** and the local site updates immediately. To put it on the live
+site, double-click `publish.bat`.
 
 ### Hover animations (GIFs)
 
-Each product can have an optional GIF on top of its still photo. Upload one in the
-admin under **Hover animation**, and on the shop:
+Each product can have an optional GIF over its still photo:
 
 - hovering the card cross-fades from the photo to the GIF
 - a small **GIF** hint badge appears on cards that have one
 - on phones, where there is no hover, **tapping the photo** plays it
-- the file is only downloaded the first time someone hovers, never on page load
+- the file is only downloaded on first hover, never on page load
 
-Keep GIFs small — around 2 MB and a couple of seconds. A GIF is many times larger than
-a photo, and a heavy one makes the first hover feel sluggish. The upload limit is 15 MB.
-Leave the field empty for products that shouldn't animate.
+Keep GIFs small — around 2 MB and a couple of seconds. The upload limit is 15 MB.
 
 ### The password
 
-The admin password lives in the `.env` file in the project root:
+The admin password lives in `.env` in the project root:
 
 ```
 ADMIN_PASSWORD=your-password-here
 ```
 
-`npm start` reads it automatically. To change the password, edit that one line and
-restart the server.
+`.env` is in `.gitignore`, so it stays on your machine and never reaches GitHub.
+Change the password by editing that line and restarting.
 
-**`.env` is listed in `.gitignore`** — keep it that way, and never commit or share it.
-If no `.env` exists the password falls back to `sugi-admin` and the server prints a
-warning on startup.
-
-When deploying, most hosts (Render, Railway, Fly.io) let you set `ADMIN_PASSWORD` as an
-environment variable in their dashboard instead of uploading `.env`. A real environment
-variable always takes priority over the file.
+Because the admin only ever runs on your own computer, it isn't exposed to the
+internet — the live Netlify site has no admin and no API.
 
 ## Where the data lives
 
-| File                          | Contents                                  |
-| ----------------------------- | ----------------------------------------- |
-| `server/data/products.json`   | The live menu — **the source of truth**    |
-| `server/data/settings.json`   | Shop details, banner messages              |
-| `server/uploads/`             | Photos uploaded through the admin          |
-| `src/defaultData.js`          | Offline fallback, bundled at build time    |
-| `.env`                        | Admin password — **never commit this**     |
+| Path                     | Contents                                     |
+| ------------------------ | -------------------------------------------- |
+| `src/data/products.json` | The menu — **the source of truth**            |
+| `src/data/settings.json` | Shop details, banner messages                 |
+| `public/uploads/`        | Photos and GIFs uploaded through the admin    |
+| `.env`                   | Admin password — **never committed**          |
 
-Back up `server/data/` and `server/uploads/` — that's your whole shop.
+These live inside the app on purpose: the build imports them directly, so what you
+save in the admin is exactly what gets published. No second copy to keep in sync.
 
-`src/defaultData.js` is only used if the API can't be reached, so the shop shows a menu
-instead of an empty page. It is a snapshot, so it can drift from the live data; it is
-not used when the server is running.
+They're committed to git, so your menu history is your backup.
 
-## Going live
+## Publishing
 
-The shop needs a host that runs **Node**, not static hosting, because the admin writes
-to disk. Render, Railway, Fly.io or any small VPS will do.
+`publish.bat` commits your changes and pushes to GitHub. Netlify watches the repo and
+rebuilds automatically.
+
+Equivalent by hand:
 
 ```bash
-npm run build          # builds the shop into build/
-ADMIN_PASSWORD=... node server/index.js
+git add -A
+git commit -m "Update shop menu"
+git push
 ```
 
-When `build/` exists the API server also serves the shop, so one process handles
-everything on one port.
-
-Before going live:
-
-1. Make sure `ADMIN_PASSWORD` is set (via `.env` or your host's dashboard).
-2. Serve over **HTTPS** — the admin password is sent in the request body.
-3. Point the two absolute URLs in `public/index.html` (`og:image`, `og:url`) at your
-   real domain, or WhatsApp link previews won't render.
+Or use GitHub Desktop and press **Push origin**.
 
 ## Changing the colours
 
@@ -117,18 +118,29 @@ The whole palette comes from one block of channel tokens at the top of `src/App.
 
 Edit those and the entire site re-themes — buttons, glows, borders, badges and prices.
 
+## If you ever want the admin online
+
+Right now the admin is local-only, which is free and keeps it private. Putting it on
+the internet means running the Node server on a host like Render, Railway or Fly.io,
+because it needs to write files. Two things to know before doing that: free tiers wipe
+uploaded files whenever the server restarts, so you'd need a paid persistent disk
+(around $7/month); and the admin would then be reachable from the internet, so the
+password would need to be strong and served over HTTPS.
+
 ## Project layout
 
 ```
 server/
-  index.js            Express API (auth, products, settings, uploads)
-  data/               JSON storage
-  uploads/            uploaded photos
+  index.js            Local API (auth, products, settings, uploads)
 src/
   App.js              the shop
-  api.js              API client
+  api.js              API client (development only)
   constants.js        shop-settings context
-  defaultData.js      offline fallback
+  defaultData.js      imports src/data/*.json into the build
+  data/               products.json + settings.json  <- your menu
   components/         storefront components
-  admin/              the admin panel
+  admin/              the admin panel (separate bundle)
+public/
+  images/             original product photos
+  uploads/            photos and GIFs added via the admin
 ```

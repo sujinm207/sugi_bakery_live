@@ -3,12 +3,9 @@ node_modules
 # Secrets — never commit this
 .env
 
-# Uploaded product photos and live shop data (back these up separately)
-server/uploads/*
-!server/uploads/.gitkeep
-
 # Build output
 build
 
-# Local helper script, not part of the project
+# Local helper scripts, not part of the project
 push-to-github.bat
+publish.bat
