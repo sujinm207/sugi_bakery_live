@@ -1,29 +1,5 @@
 [
   {
-    "id": 1,
-    "name": "Banana Chips",
-    "emoji": "🍌",
-    "tag": "Kerala Classic",
-    "tagStyle": "crispy",
-    "description": "Crispy golden banana chips made from fresh Kerala bananas",
-    "image": "/images/banana_chips_outdoor.webp",
-    "gif": "https://www.icegif.com/wp-content/uploads/2022/04/icegif-426.gif",
-    "sizes": [
-      {
-        "name": "250g",
-        "price": 89
-      },
-      {
-        "name": "500g",
-        "price": 160
-      },
-      {
-        "name": "1kg",
-        "price": 320
-      }
-    ]
-  },
-  {
     "id": 2,
     "name": "Mixture1",
     "emoji": "🥜",
@@ -68,6 +44,30 @@
       {
         "name": "1kg",
         "price": 240
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "name": "Banana Chips",
+    "emoji": "🍌",
+    "tag": "Kerala Classic",
+    "tagStyle": "crispy",
+    "description": "Crispy golden banana chips made from fresh Kerala bananas",
+    "image": "/images/banana_chips_outdoor.webp",
+    "gif": "https://www.icegif.com/wp-content/uploads/2022/04/icegif-426.gif",
+    "sizes": [
+      {
+        "name": "250g",
+        "price": 89
+      },
+      {
+        "name": "500g",
+        "price": 160
+      },
+      {
+        "name": "1kg",
+        "price": 320
       }
     ]
   },
